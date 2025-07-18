@@ -19,7 +19,6 @@ In this project, I’ve worked on applying SQL to explore, clean, and analyze re
 
 ```sql
 CREATE DATABASE retail;
-USE retail;
 
 CREATE TABLE retail_sales (
     transactions_id   INT PRIMARY KEY,
