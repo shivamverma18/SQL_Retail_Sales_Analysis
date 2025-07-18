@@ -18,25 +18,66 @@ In this project, I’ve worked on applying SQL to explore, clean, and analyze re
 - **Table Creation**: A table named `retail_sales` is created to store the sales data. The table structure includes columns for transaction ID, sale date, sale time, customer ID, gender, age, product category, quantity sold, price per unit, cost of goods sold (COGS), and total sale amount.
 
 ```sql
-CREATE DATABASE p1_retail_db;
+CREATE DATABASE retail;
+USE retail;
 
-CREATE TABLE retail_sales
-(
-    transactions_id INT PRIMARY KEY,
-    sale_date DATE,	
-    sale_time TIME,
-    customer_id INT,	
-    gender VARCHAR(10),
-    age INT,
-    category VARCHAR(35),
-    quantity INT,
-    price_per_unit FLOAT,	
-    cogs FLOAT,
-    total_sale FLOAT
+CREATE TABLE retail_sales (
+    transactions_id   INT PRIMARY KEY,
+    sale_date         DATE,
+    sale_time         TIME,
+    customer_id       INT,
+    gender            VARCHAR(10),
+    age               INT,
+    category          VARCHAR(20),
+    quantity          INT NULL,
+    price_per_unit    FLOAT NULL,
+    cogs              FLOAT NULL,
+    total_sale        FLOAT NULL
 );
 ```
+### 2. Handling Missing/Null/Blank Data
 
-### 2. Data Exploration & Cleaning
+I had a CSV file with ~2000 rows that included some missing and inconsistent data like 'NA', blank fields, and commas in numbers. Initially, MySQL was skipping or throwing errors on these rows. I solved it by preprocessing the import using @variables in the LOAD DATA INFILE command, replacing commas, and safely converting blank or non-numeric values to NULL using NULLIF() and REPLACE(). This ensured a complete and clean import of the dataset into MySQL.
+
+```sql
+In Order to Include the Missing/Null/Blank Data Value We use this: (start1:end1)
+-- start1
+
+ALTER TABLE retail_sales
+MODIFY transactions_id INT,
+MODIFY sale_date DATE NULL,
+MODIFY sale_time TIME NULL,
+MODIFY customer_id INT NULL,
+MODIFY gender VARCHAR(10) NULL,
+MODIFY age INT NULL,
+MODIFY category VARCHAR(20) NULL,
+MODIFY quantity INT NULL,
+MODIFY price_per_unit FLOAT NULL,
+MODIFY cogs FLOAT NULL,
+MODIFY total_sale FLOAT NULL;
+
+LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/SQL_Retail_Sales_Analysis_utf _org_Copy_2.csv'
+INTO TABLE retail_sales
+FIELDS TERMINATED BY ','  
+ENCLOSED BY '"' 
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(@transactions_id, @sale_date, @sale_time, @customer_id, @gender, @age, @category, @quantity, @price_per_unit, @cogs, @total_sale)
+SET 
+    transactions_id = NULLIF(@transactions_id, ''),
+    sale_date = NULLIF(@sale_date, ''),
+    sale_time = NULLIF(@sale_time, ''),
+    customer_id = NULLIF(@customer_id, ''),
+    gender = NULLIF(@gender, ''),
+    age = NULLIF(@age, ''),
+    category = NULLIF(@category, ''),
+    quantity = IF(@quantity REGEXP '^[0-9,.]+$', REPLACE(@quantity, ',', ''), NULL),
+    price_per_unit = IF(@price_per_unit REGEXP '^[0-9,.]+$', REPLACE(@price_per_unit, ',', ''), NULL),
+    cogs = IF(@cogs REGEXP '^[0-9,.]+$', REPLACE(@cogs, ',', ''), NULL),
+    total_sale = IF(@total_sale REGEXP '^[0-9,.]+$', REPLACE(@total_sale, ',', ''), NULL);
+
+```
+### 3. Data Exploration & Cleaning
 
 - **Record Count**: Determine the total number of records in the dataset.
 - **Customer Count**: Find out how many unique customers are in the dataset.
@@ -61,7 +102,7 @@ WHERE
     quantity IS NULL OR price_per_unit IS NULL OR cogs IS NULL;
 ```
 
-### 3. Data Analysis & Findings
+### 4. Data Analysis & Findings
 
 The following SQL queries were developed to answer specific business questions:
 
@@ -208,11 +249,5 @@ SELECT EXTRACT(HOUR FROM current_time) AS Time_of_the_moment;
 
 This project serves as a comprehensive introduction to SQL for data analysts, covering database setup, data cleaning, exploratory data analysis, and business-driven SQL queries. The findings from this project can help drive business decisions by understanding sales patterns, customer behavior, and product performance.
 
-## How to Use
-
-1. **Clone the Repository**: Clone this project repository from GitHub.
-2. **Set Up the Database**: Run the SQL scripts provided in the `database_setup.sql` file to create and populate the database.
-3. **Run the Queries**: Use the SQL queries provided in the `analysis_queries.sql` file to perform your analysis.
-4. **Explore and Modify**: Feel free to modify the queries to explore different aspects of the dataset or answer additional business questions.
 
 Thank you for your support, and I look forward to connecting with you!
